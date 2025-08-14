@@ -115,10 +115,12 @@ async function handleContentScriptMessage({type, params, host}) {
     return
   } else {
     // acquire mutex here before reading policies
-    releasePromptMutex = await promptMutex.acquire()
+    // releasePromptMutex = await promptMutex.acquire()
 
     // do the operation before asking (because we'll show the encryption/decryption results in the popup
     const finalResult = await performOperation(type, params)
+
+    /*
 
     let allowed = await getPermissionStatus(
       host,
@@ -176,6 +178,7 @@ async function handleContentScriptMessage({type, params, host}) {
         }
       }
     }
+      */
 
     // the call was authorized, so we just return the result we had from before
     return finalResult
@@ -183,44 +186,26 @@ async function handleContentScriptMessage({type, params, host}) {
 }
 
 async function performOperation(type, params) {
-  let results = await browser.storage.local.get('private_key')
-  if (!results || !results.private_key) {
-    return {error: {message: 'no private key found'}}
-  }
-
-  let sk = results.private_key
+  console.info('performOperation', type, params)
+  const response = await fetch('http://localhost:8080/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type,
+      params,
+    })
+  })
   try {
-    switch (type) {
-      case 'getPublicKey': {
-        return getPublicKey(sk)
-      }
-      case 'signEvent': {
-        const event = finalizeEvent(params.event, sk)
-        return validateEvent(event)
-          ? event
-          : {error: {message: 'invalid event'}}
-      }
-      case 'nip04.encrypt': {
-        let {peer, plaintext} = params
-        return nip04.encrypt(sk, peer, plaintext)
-      }
-      case 'nip04.decrypt': {
-        let {peer, ciphertext} = params
-        return nip04.decrypt(sk, peer, ciphertext)
-      }
-      case 'nip44.encrypt': {
-        const {peer, plaintext} = params
-        const key = getSharedSecret(sk, peer)
-
-        return nip44.v2.encrypt(plaintext, key)
-      }
-      case 'nip44.decrypt': {
-        const {peer, ciphertext} = params
-        const key = getSharedSecret(sk, peer)
-
-        return nip44.v2.decrypt(ciphertext, key)
-      }
+    let responseJson = { success: false, error: 'Unknown error' }
+    try {
+      responseJson = (await response.json()) || responseJson
+    } catch (error) {
+      console.error('Failed to parse json', error)
     }
+    if (!response.ok || !responseJson.success) {
+      throw new Error(responseJson.error ? `${responseJson.error}` : 'Unknown error')
+    }
+    return responseJson.result
   } catch (error) {
     return {error: {message: error.message, stack: error.stack}}
   }

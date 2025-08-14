@@ -6,54 +6,56 @@ import React, {useState, useRef, useEffect} from 'react'
 import QRCode from 'react-qr-code'
 
 function Popup() {
-  let [pubKey, setPubKey] = useState('')
-
-  let keys = useRef([])
+  let [ipAddress, setIpAddress] = useState('')
 
   useEffect(() => {
-    browser.storage.local.get(['private_key', 'relays']).then(results => {
-      if (results.private_key) {
-        let hexKey = getPublicKey(results.private_key)
-        let npubKey = nip19.npubEncode(hexKey)
+    const fetchIpAddress = async () => {
+      try {
+        console.info('fetching ip address')
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        
+        const response = await fetch('http://localhost:8080/ip-address', {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
 
-        setPubKey(npubKey)
-
-        keys.current.push(npubKey)
-        keys.current.push(hexKey)
-
-        if (results.relays) {
-          let relaysList = []
-          for (let url in results.relays) {
-            if (results.relays[url].write) {
-              relaysList.push(url)
-              if (relaysList.length >= 3) break
-            }
-          }
-          if (relaysList.length) {
-            let nprofileKey = nip19.nprofileEncode({
-              pubkey: hexKey,
-              relays: relaysList
-            })
-            keys.current.push(nprofileKey)
-          }
+        if (!response.ok) {
+          throw new Error('Failed to fetch ip address')
         }
-      } else {
-        setPubKey(null)
+
+        if (!interval) {
+          return
+        }
+        
+        const data = await response.json()
+        setIpAddress(data.ip)
+        clearInterval(interval)
+      } catch (error) {
+        console.error('Failed to fetch ip address', error)
       }
-    })
+    }
+    let interval = setInterval(fetchIpAddress, 6000)
+    fetchIpAddress()
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = undefined
+      }
+    }
   }, [])
 
   return (
     <div style={{marginBottom: '5px'}}>
-      <h2>nos2x</h2>
-      {pubKey === null ? (
-        <div>
-          <button onClick={openOptionsButton}>start here</button>
-        </div>
+      <h2>Note Guardian</h2>
+      {ipAddress === '' ? (
+        <p>
+          Fetching server IP...
+        </p>
       ) : (
         <>
           <p>
-            <a onClick={toggleKeyType}>↩️</a> your public key:
+            Server:
           </p>
           <pre
             style={{
@@ -62,7 +64,7 @@ function Popup() {
               width: '200px'
             }}
           >
-            <code>{pubKey}</code>
+            <code>http://{ipAddress}:8080</code>
           </pre>
 
           <div
@@ -76,7 +78,7 @@ function Popup() {
             <QRCode
               size={256}
               style={{height: 'auto', maxWidth: '100%', width: '100%'}}
-              value={pubKey.startsWith('n') ? pubKey.toUpperCase() : pubKey}
+              value={`http://${ipAddress}:8080`}
               viewBox={`0 0 256 256`}
             />
           </div>
