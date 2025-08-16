@@ -29,7 +29,9 @@
     "fetch": false,
     "EventSource": false,
     "localStorage": false,
-    "sessionStorage": false
+    "sessionStorage": false,
+    "RTCPeerConnection": false,
+    "RTCSessionDescription": false
   },
 
   "rules": {

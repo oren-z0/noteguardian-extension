@@ -36,9 +36,12 @@ window.nostr = {
     }
   },
 
+  _idCounter: 0,
+
   _call(type, params) {
-    let id = Math.random().toString().slice(-4)
-    console.log(
+    const id = `${Math.random().toString(36).substring(2, 10)}-${this._idCounter}`
+    this._idCounter += 1
+    console.info(
       '%c[nos2x:%c' +
         id +
         '%c]%c calling %c' +
@@ -75,18 +78,11 @@ window.addEventListener('message', message => {
     message.data.response === undefined ||
     message.data.ext !== 'nos2x' ||
     !window.nostr._requests[message.data.id]
-  )
+  ) {
     return
-
-  if (message.data.response.error) {
-    let error = new Error('nos2x: ' + message.data.response.error.message)
-    error.stack = message.data.response.error.stack
-    window.nostr._requests[message.data.id].reject(error)
-  } else {
-    window.nostr._requests[message.data.id].resolve(message.data.response)
   }
 
-  console.log(
+  console.info(
     '%c[nos2x:%c' +
       message.data.id +
       '%c]%c result: %c' +
@@ -100,21 +96,14 @@ window.addEventListener('message', message => {
     'font-weight:bold;color:#08589d'
   )
 
-  delete window.nostr._requests[message.data.id]
-})
-
-// hack to replace nostr:nprofile.../etc links with something else
-let replacing = null
-document.addEventListener('mousedown', replaceNostrSchemeLink)
-async function replaceNostrSchemeLink(e) {
-  if (e.target.tagName !== 'A' || !e.target.href.startsWith('nostr:')) return
-  if (replacing === false) return
-
-  let response = await window.nostr._call('replaceURL', {url: e.target.href})
-  if (response === false) {
-    replacing = false
-    return
+  if (message.data.response.success) {
+    window.nostr._requests[message.data.id].resolve(message.data.response.result)
+  } else {
+    const internalError = message.data.response.error ?? new Error('nos2x: unknown error')
+    const error = new Error('nos2x: ' + internalError)
+    error.stack = message.data.response.error.stack
+    window.nostr._requests[message.data.id].reject(error)
   }
 
-  e.target.href = response
-}
+  delete window.nostr._requests[message.data.id]
+})

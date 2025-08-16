@@ -1,9 +1,5 @@
 import browser from 'webextension-polyfill'
 
-export const NO_PERMISSIONS_REQUIRED = {
-  replaceURL: true
-}
-
 export const PERMISSION_NAMES = Object.fromEntries([
   ['getPublicKey', 'read your public key'],
   ['signEvent', 'sign events using your private key'],

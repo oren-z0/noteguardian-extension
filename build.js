@@ -13,7 +13,8 @@ esbuild
       'prompt.build': './extension/prompt.jsx',
       'options.build': './extension/options.jsx',
       'background.build': './extension/background.js',
-      'content-script.build': './extension/content-script.js'
+      'content-script.build': './extension/content-script.js',
+      'offscreen.build': './extension/offscreen.js'
     },
     outdir: './extension',
     sourcemap: prod ? false : 'inline',
