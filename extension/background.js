@@ -10,7 +10,7 @@ async function ensureOffscreen() {
   }
   await browser.offscreen.createDocument({
     url: browser.runtime.getURL('offscreen.html'),
-    reasons: ['IFRAME_SCRIPTING'],
+    reasons: ['IFRAME_SCRIPTING', 'USER_MEDIA'],
     justification: 'Run WebRTC persistently'
   })
   return true
