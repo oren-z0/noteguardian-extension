@@ -42,7 +42,7 @@ window.nostr = {
     const id = `${Math.random().toString(36).substring(2, 10)}-${this._idCounter}`
     this._idCounter += 1
     console.info(
-      '%c[nos2x:%c' +
+      '%c[noteguardian:%c' +
         id +
         '%c]%c calling %c' +
         type +
@@ -61,7 +61,7 @@ window.nostr = {
       window.postMessage(
         {
           id,
-          ext: 'nos2x',
+          ext: 'noteguardian',
           type,
           params
         },
@@ -76,14 +76,14 @@ window.addEventListener('message', message => {
     !message.data ||
     message.data.response === null ||
     message.data.response === undefined ||
-    message.data.ext !== 'nos2x' ||
+    message.data.ext !== 'noteguardian' ||
     !window.nostr._requests[message.data.id]
   ) {
     return
   }
 
   console.info(
-    '%c[nos2x:%c' +
+    '%c[noteguardian:%c' +
       message.data.id +
       '%c]%c result: %c' +
       JSON.stringify(
@@ -99,8 +99,8 @@ window.addEventListener('message', message => {
   if (message.data.response.success) {
     window.nostr._requests[message.data.id].resolve(message.data.response.result)
   } else {
-    const internalError = message.data.response.error ?? new Error('nos2x: unknown error')
-    const error = new Error('nos2x: ' + internalError)
+    const internalError = message.data.response.error ?? new Error('noteguardian: unknown error')
+    const error = new Error('noteguardian: ' + internalError)
     error.stack = message.data.response.error.stack
     window.nostr._requests[message.data.id].reject(error)
   }
