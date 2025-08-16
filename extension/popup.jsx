@@ -1,8 +1,9 @@
 import browser from 'webextension-polyfill'
 import {createRoot} from 'react-dom/client'
-import React, {useState, useEffect, useRef} from 'react'
+import React, {useState, useEffect, useRef, useMemo} from 'react'
 import QRCode from 'react-qr-code'
 import jsQR from 'jsqr'
+import pako from 'pako'
 
 function Popup() {
   const [offerSdp, setOfferSdp] = useState(undefined)
@@ -182,10 +183,18 @@ function Popup() {
     }
   }, [])
 
-  const offerUrl = offerSdp && `https://guardian.niot.space/#offer=${encodeURIComponent(offerSdp)}`
+  const offerUrl = useMemo(() => {
+    if (!offerSdp) {
+      return ''
+    }
+    const offerSdpCompressedUint8Array = pako.deflate(offerSdp)
+    const offerSdpCompressedBase64 = btoa(String.fromCharCode(...offerSdpCompressedUint8Array)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+    return `https://guardian.niot.space/#offer=${encodeURIComponent(offerSdpCompressedBase64)}`
+  }, [offerSdp])
 
   return (
-    <div style={{marginBottom: '5px', minWidth: '210px' }}>
+    <div style={{marginBottom: '5px', minWidth: '260px' }}>
       <h2 style={{ whiteSpace: 'nowrap', textAlign: 'center', width: '100%', marginBottom: '10px' }}>Note Guardian</h2>
       {
         connectionState === 'connected' ? (
@@ -211,7 +220,6 @@ function Popup() {
                   height: 'auto',
                   minWidth: 210,
                   minHeight: 210,
-                  maxWidth: 256,
                   width: '100%'
                 }}
               >
