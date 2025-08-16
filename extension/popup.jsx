@@ -26,11 +26,14 @@ function Popup() {
       setAnswerSdp('')
       setAnswerError('')
       await browser.runtime.sendMessage({ type: 'ENSURE_OFFSCREEN' })
-      const newOffer = await browser.runtime.sendMessage({ type: 'MAKE_OFFER', refresh })
+      const { offer: newOffer, isConnected } = await browser.runtime.sendMessage({ type: 'MAKE_OFFER', refresh })
       console.info('newOffer', newOffer)
       if (newOffer && newOffer.type === 'offer') {
         clearTimeout(resetSdpTimeout)
         setOfferSdp(newOffer.sdp)
+        if (isConnected) {
+          setConnectionState('connected')
+        }
       }
     } catch (err) {
       console.error('Failed to fetch offer', err)
@@ -61,12 +64,13 @@ function Popup() {
       if (!answerSdp) {
         return
       }
+      setConnectionState('connecting')
       const success = await browser.runtime.sendMessage({ type: 'SET_ANSWER', answerSdp })
       if (!success) {
+        setConnectionState('init')
         setAnswerError('Failed to set answer')
         return
       }
-      setConnectionState('connecting')
     }
     setAnswer()
   }, [answerSdp])

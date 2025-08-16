@@ -31,7 +31,7 @@ async function makeOffer(refresh) {
   offerInFlight = true
   try {
     if (!refresh && peerConnection) {
-      return peerConnection.localDescription
+      return { offer: peerConnection.localDescription, isConnected: peerConnection.connectionState === 'connected' }
     }
     resetPeer()
 
@@ -77,7 +77,7 @@ async function makeOffer(refresh) {
     await iceGatheringDone
 
     // Persist the complete SDP for the UI to read (popup/options)
-    return newPeerConnection.localDescription
+    return { offer: newPeerConnection.localDescription, isConnected: newPeerConnection.connectionState === 'connected' }
   } catch (err) {
     console.error('Failed to make offer', err)
     resetPeer()
