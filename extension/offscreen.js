@@ -126,6 +126,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 const nostrTypes = new Set([
   'getPublicKey',
   'signEvent',
+  'getRelays',
   'nip04.encrypt',
   'nip04.decrypt',
   'nip44.encrypt',

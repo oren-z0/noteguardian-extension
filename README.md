@@ -11,6 +11,7 @@ It implements [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md)
 ```
 async window.nostr.getPublicKey(): string // returns your public key as hex
 async window.nostr.signEvent(event): Event // returns the full event object signed
+async window.nostr.getRelays(): object // returns an object with relay urls as keys and their status as values
 async window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
 async window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
 async window.nostr.nip44.encrypt(pubkey, plaintext): string // takes pubkey, plaintext, returns ciphertext as specified in nip-44
